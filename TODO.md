@@ -1,1 +1,20 @@
-1. Fix random forest issues
+- [X] set up base file project structure and github
+- [X] load data from virus_genome folder into pandas dataframe and perform kmer processing
+- [X] normalize kmer values and merge with zoonotic
+- [X] store models in pickle files - currently in curr_models
+- [X] fix gradient boosting and XGBoost inconsistencies - properly order dataset in way it was trained
+- [X] fix random forest issues
+- [X] fix mergedDf problems with sequences & classification not lining up properly
+- [X] visualize kmer patterns & feature importances with pyplot
+- [X] similar sequence patterns
+- [X] retrieve blood virome data from genbank for validation
+- [X] separate model architecture into three different files ("run" for initial data preprocessing and storage, "models" for evaluation, "validate" for testing model performance)
+- [X] load data into "info.csv" for quick access & load times
+- [X] add initial synthetic data for testing
+- [ ] optimize HTTP requests for blood virome accessions
+- [ ] optimize synthetic data for better performance
+- [ ] finish validate model on blood sequences
+- [ ] validate/continue training on nardus mollentze paper
+- [ ] add protein sequences for higher robustness
+- [ ] consider NOT normalizing data before loading it into info.csv
+- [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
