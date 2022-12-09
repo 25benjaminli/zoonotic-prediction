@@ -18,3 +18,6 @@
 - [ ] add protein sequences for higher robustness
 - [ ] consider NOT normalizing data before loading it into info.csv
 - [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
+- [ ] fix gitignore not sensing contigs
+- [ ] consider restructuring models to handle without normalization and diff models for diff base pairings?
+- [ ] consider using different kmer lengths!!
