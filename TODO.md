@@ -14,7 +14,7 @@
 - [ ] optimize HTTP requests for blood virome accessions
 - [ ] optimize synthetic data for better performance
 - [ ] finish validate model on blood sequences
-- [ ] validate/continue training on nardus mollentze paper
+- [ ] fix validation/continue training on nardus mollentze paper
 - [ ] add protein sequences for higher robustness
 - [ ] consider NOT normalizing data before loading it into info.csv
 - [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
