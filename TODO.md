@@ -11,10 +11,10 @@
 - [X] separate model architecture into three different files ("run" for initial data preprocessing and storage, "models" for evaluation, "validate" for testing model performance)
 - [X] load data into "info.csv" for quick access & load times
 - [X] add initial synthetic data for testing
-- [ ] optimize HTTP requests for blood virome accessions
+- [X] optimize HTTP requests for blood virome accessions
 - [ ] optimize synthetic data for better performance
 - [ ] finish validate model on blood sequences
-- [ ] fix validation/continue training on nardus mollentze paper
+- [ ] fix validation/continue training on nardus mollentze paper for GBM
 - [ ] add protein sequences for higher robustness
 - [ ] consider NOT normalizing data before loading it into info.csv
 - [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
