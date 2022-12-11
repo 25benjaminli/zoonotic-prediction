@@ -14,10 +14,10 @@
 - [X] optimize HTTP requests for blood virome accessions
 - [ ] optimize synthetic data for better performance
 - [ ] finish validate model on blood sequences
-- [ ] fix validation/continue training on nardus mollentze paper for GBM
+- [X] fix validation/continue training on nardus mollentze paper for GBM - we know that merging datasets works!!
 - [ ] add protein sequences for higher robustness
 - [ ] consider NOT normalizing data before loading it into info.csv
 - [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
-- [ ] fix gitignore not sensing contigs
+- [X] fix gitignore not sensing contigs
 - [ ] consider restructuring models to handle without normalization and diff models for diff base pairings?
 - [ ] consider using different kmer lengths!!
