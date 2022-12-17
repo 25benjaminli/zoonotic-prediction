@@ -22,7 +22,7 @@ from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accu
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
-from model_utils import transform_data
+from data_utils import transform_data
 """
 ROC curves
 """
@@ -50,22 +50,31 @@ def draw_roc_curve(model, X_test, y_test):
 """
 FEATURE IMPORTANCE GRAPHS
 """
-def draw_feature_importances_lr(lrmodel, X_test, y_test):
-    results = lrmodel.coef_[0]
+
+def draw_feature_importances(model, X_test):
+    # ALWAYS reset X columns to the right order
+    l = type(model)
+    results = None
+    if l.__name__ == "GradientBoostingClassifier" or l.__name__ == "XGBClassifier":
+        # print("gradboost")
+        results = model.feature_importances_
+    elif l.__name__ == "LogisticRegression":
+        # print("xgboost")
+        results = model.coef_[0]
+
+    elif l.__name__ == "BalancedBaggedClassifier":
+        # do it for RF and KNN?
+        results = np.mean([est.steps[1][1].feature_importances_ for est in model.estimators_], axis=0)
 
     l = zip([x for x in X_test.columns.values],results)
     l = list(l)
     res = sorted(l, key= lambda x: x[1])
 
     plt.xticks(rotation=90)
-    plt.tick_params(axis='x', which='major', labelsize=5)
+    plt.tick_params(axis='x', which='major', labelsize=10)
 
     plt.bar([x[0] for x in res[230:]], [x[1] for x in res[230:]])
     plt.show()
-
-def draw_feature_importances_gradBoost(gradBoost, X_test, y_test):
-    # ALWAYS reset X columns to the right order
-    pass
 
 
 """

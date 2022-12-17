@@ -22,54 +22,6 @@ from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accu
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
 
-def resetkmerdict(permset)->OrderedDict:
-        kmerdict = OrderedDict()
-        for i in permset:
-            kmerdict[i]=0
-        return kmerdict
-
-def assign_kmers_to_dict(row, permset, kmer):
-    kmerdict=resetkmerdict(permset)
-    st = row # tune for which column the sequence is in
-    for j in range(len(st)-kmer+1):
-        if not st[j:j+kmer] in permset: continue
-        kmerdict[st[j:j+kmer]]+=1
-    return kmerdict
-
-def getTrainParams(mergedDf, kmer):
-    print(mergedDf)
-    s = product('acgt',repeat = kmer)
-    permset = set(["".join(x) for x in list(s)])
-
-    l = []
-    
-    for row in tqdm.tqdm(mergedDf.itertuples()):
-        l.append(assign_kmers_to_dict(row, permset, kmer))
-
-    finalkmerdict=pd.DataFrame(l)
-    
-    # shouldn't need to fill NAs
-    # mergedDf.fillna(0, inplace=True)
-
-    X = finalkmerdict
-    Y = mergedDf['isZoonotic']
-    X = X.apply(lambda x: (x-x.min())/(x.max()-x.min()), axis=1)
-    # print(X.head())
-
-    global asdfX
-    asdfX = X.copy()
-    global asdfY
-    asdfY = Y.copy()
-
-
-    place = pd.concat([X, Y], axis=1)
-    
-    # print(place)
-
-    place.to_csv('data/info.csv', index=False)
-
-    return train_test_split(X, Y, test_size=0.2, random_state=1)
-
 def saveModel(model, name, X_test, y_test, params=None, dir='models/curr_models', gradBoost=False, xgBoost=False):
     if not path.exists(f"{dir}/{name}.pkl"):
         print("does not exist")
@@ -116,20 +68,6 @@ def saveModel(model, name, X_test, y_test, params=None, dir='models/curr_models'
             model=pickled_model
     return model
 
-def transform_data(model, X_test):
-    l = type(model)
-    print(l.__name__)
-
-    if l.__name__ == "GradientBoostingClassifier":
-        print("gradboost")
-        cols_when_model_builds = model.feature_names_in_
-        X_test=X_test[cols_when_model_builds]
-    elif l.__name__ == "XGBClassifier":
-        print("xgboost")
-        cols_when_model_builds = model.get_booster().feature_names
-        X_test=X_test[cols_when_model_builds]
-
-    return X_test
 
 def pred_res_proba(model, X_val):
     l = type(model)
