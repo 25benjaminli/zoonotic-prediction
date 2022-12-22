@@ -1,0 +1,14 @@
+a91a30bc45038b3b74ea2e38dbff583a  ./annotation_hashes.txt
+2017c5f61c12838fede73eb4e5824ad4  ./GCF_000848505.1_ViralProj14703_assembly_report.txt
+2591462d9124c2215a1b141019da853a  ./GCF_000848505.1_ViralProj14703_assembly_stats.txt
+bea92d0b1164e9b581362db7b7457ec5  ./GCF_000848505.1_ViralProj14703_cds_from_genomic.fna.gz
+98c14a4ef0549ad17bffd89f68770ad4  ./GCF_000848505.1_ViralProj14703_feature_count.txt.gz
+075194c8eea4775d96e702985ef00cec  ./GCF_000848505.1_ViralProj14703_feature_table.txt.gz
+92b8cd92f275ecd0a6256887a42bebb8  ./GCF_000848505.1_ViralProj14703_genomic.fna.gz
+d656d79d97b78bb9551d5c76673cc725  ./GCF_000848505.1_ViralProj14703_genomic.gbff.gz
+c3227798d131673716977144faefd308  ./GCF_000848505.1_ViralProj14703_genomic.gff.gz
+091f6b6333b8fd465dbaf06fd299c76b  ./GCF_000848505.1_ViralProj14703_genomic.gtf.gz
+fe3092d8f24f566897cfa05ca583d377  ./GCF_000848505.1_ViralProj14703_protein.faa.gz
+b9cc458b58060b35c2b8ef5c464581ef  ./GCF_000848505.1_ViralProj14703_protein.gpff.gz
+b4c26f5d02a7664dbb41467b307fa48b  ./GCF_000848505.1_ViralProj14703_rna_from_genomic.fna.gz
+e9ead85e1719abc2b7ef27e4f78ab089  ./GCF_000848505.1_ViralProj14703_translated_cds.faa.gz
