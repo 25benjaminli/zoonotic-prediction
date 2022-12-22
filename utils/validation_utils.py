@@ -40,7 +40,15 @@ def draw_roc_curve(model, X_test, y_test):
     auc_thing = roc_auc_score(y_test, y_pred_proba)
 
     print(y_pred_proba)
-    plt.plot(fpr,tpr,label="AUC="+str(auc_thing))
+    return fpr, tpr, auc_thing
+    
+
+def draw_roc_multiple(models, X_test, y_test):
+    for key in models:
+        fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test)
+        plt.plot(fpr,tpr,label=f"{key}, auc="+str(auc))
+        
+
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     plt.legend(loc=4)
@@ -65,7 +73,8 @@ def draw_feature_importances(model, X_test):
     elif l.__name__ == "BalancedBaggedClassifier":
         # do it for RF and KNN?
         results = np.mean([est.steps[1][1].feature_importances_ for est in model.estimators_], axis=0)
-
+    
+    
     l = zip([x for x in X_test.columns.values],results)
     l = list(l)
     res = sorted(l, key= lambda x: x[1])
@@ -118,3 +127,6 @@ def cross_validate(model, X_test, y_test):
     print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
     tn, fp, fn, tp = confusion_matrix(y_test, model.predict(X_test)).ravel()
     print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
+    return mean(n_scores)
+
+    
