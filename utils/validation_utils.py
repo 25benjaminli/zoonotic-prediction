@@ -39,7 +39,7 @@ def draw_roc_curve(model, X_test, y_test):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     auc_thing = roc_auc_score(y_test, y_pred_proba)
 
-    print(y_pred_proba)
+    # print(y_pred_proba)
     return fpr, tpr, auc_thing
     
 
@@ -53,6 +53,36 @@ def draw_roc_multiple(models, X_test, y_test):
     plt.xlabel('False Positive Rate')
     plt.legend(loc=4)
     plt.show()
+
+def draw_accuracies(models, X_test, y_test, obj=None):
+    if obj is None:
+        plt.tick_params(axis='x', which='major', labelsize=10)
+        plt.xticks(rotation=90)
+
+        plt.bar([key for key in models], [cross_validate(models[key], X_test, y_test) for key in models])
+        plt.show()
+    else:
+        fig, ax = plt.subplots()
+        width = 0.35
+        plt.xticks(rotation=45)
+        assert type(obj).__name__=='OrderedDict'
+
+        p1 = ax.bar([key for key in obj], [obj[key] for key in obj], width, align='center')
+        # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
+        vals = list(obj.values())
+        for rect in range(len(p1)):
+            print(vals[rect])
+            height = p1[rect].get_height()
+            ax.text(p1[rect].get_x() + p1[rect].get_width()/2., height,
+                    f'{vals[rect]}',
+                    ha='center', va='bottom')
+
+        ax.set_ylabel('Cross-Validated Accuracy')
+        ax.set_title('Scores by model')
+        ax.set_xlabel('Model Type')
+
+        # ax.set_xticks(ind, labels=["1", "2", "3", "4", "5"])
+        ax.legend(loc=4)
 
 
 """
@@ -90,43 +120,60 @@ def draw_feature_importances(model, X_test):
 CROSS VALIDATION FUNCTIONS
 """
 
-def cross_validate_XGBoost(xgboost, X_test, y_test):
-    cols_when_model_builds = xgboost.get_booster().feature_names
-    X_test=X_test[cols_when_model_builds]
-
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(xgboost, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
-    print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-    tn, fp, fn, tp = confusion_matrix(y_test, xgboost.predict(X_test)).ravel()
-    print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
-
-
-def cross_validate_gradBoost(gradBoost, X_test, y_test):
-    cols_when_model_builds = gradBoost.feature_names_in_
-    X_test=X_test[cols_when_model_builds]
-
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(gradBoost, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
-    print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-    tn, fp, fn, tp = confusion_matrix(y_test, gradBoost.predict(X_test)).ravel()
-    print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
-
-
-def cross_validate_normal(model, X_test, y_test):
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(model, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
-    print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-    tn, fp, fn, tp = confusion_matrix(y_test, model.predict(X_test)).ravel()
-    print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
-
 def cross_validate(model, X_test, y_test):
     X_test = transform_data(model, X_test)
 
     cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(model, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+    n_scores = cross_val_score(model, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise', verbose=1)
     print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
     tn, fp, fn, tp = confusion_matrix(y_test, model.predict(X_test)).ravel()
     print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
     return mean(n_scores)
 
+def cross_validate_multiple(models, X_test, y_test):
+    obj = {}
+    for key in models:
+        obj[key] = cross_validate(models[key], X_test, y_test)
     
+    return obj
+    
+
+def test():
+    obj = OrderedDict({
+    "nardus": 0.98,
+    "xgboost": 0.99,
+    "gradboost": 0.98,
+    "randomforest": 0.96,
+    "logisticregression": 0.9,
+    "mlp": 0.97,
+    "svm": 0.94,
+    "regnard": 0.94
+    })
+    fig, ax = plt.subplots()
+    width = 0.35
+    plt.xticks(rotation=90)
+    assert type(obj).__name__=='OrderedDict'
+
+    p1 = ax.bar([key for key in obj], [obj[key] for key in obj], width, align='center')
+    # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
+    vals = list(obj.values())
+    for rect in range(len(p1)):
+        print(vals[rect])
+        height = p1[rect].get_height()
+        ax.text(p1[rect].get_x() + p1[rect].get_width()/2.,height,
+                f'{vals[rect]}',
+                ha='center', va='bottom')
+
+    ax.set_ylabel('Cross-Validated Accuracy')
+    ax.set_title('Scores by model')
+    ax.set_xlabel('Model Type')
+
+    # ax.set_xticks(ind, labels=["1", "2", "3", "4", "5"])
+    ax.legend(loc=4)
+
+    # Label with label_type 'center' instead of the default 'edge'
+    # ax.bar_label(p1, label_type='center')
+
+    plt.show()
+
+# test()
