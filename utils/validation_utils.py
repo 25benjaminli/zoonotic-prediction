@@ -23,13 +23,18 @@ from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accu
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
 from data_utils import transform_data
+from sklearn.model_selection import KFold
+from sklearn.metrics import plot_roc_curve
 """
 ROC curves
 """
 
+"""
+Tested cross val with auc curve, seems to work well
+"""
 def draw_roc_curve(model, X_test, y_test):
+    # implement Kfold cross validation before drawing ROC curve
     X_test = transform_data(model, X_test)
-
     y_thing = y_test
     precision, recall, thresholds = precision_recall_curve(y_thing, model.predict_proba(X_test)[::,1])
     aaa = auc(recall, precision)
@@ -39,14 +44,16 @@ def draw_roc_curve(model, X_test, y_test):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     auc_thing = roc_auc_score(y_test, y_pred_proba)
 
-    # print(y_pred_proba)
+    print(y_pred_proba)
     return fpr, tpr, auc_thing
+
+
     
 
 def draw_roc_multiple(models, X_test, y_test):
     for key in models:
         fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test)
-        plt.plot(fpr,tpr,label=f"{key}, auc="+str(auc))
+        plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
         
 
     plt.ylabel('True Positive Rate')
@@ -176,4 +183,3 @@ def test():
 
     plt.show()
 
-# test()
