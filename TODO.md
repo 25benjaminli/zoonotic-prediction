@@ -15,10 +15,9 @@
 - [ ] optimize synthetic data for better performance
 - [ ] finish validate model on blood sequences
 - [X] fix validation/continue training on nardus mollentze paper for GBM - we know that merging datasets works!!
-- [ ] add protein sequences for higher robustness
-- [ ] consider NOT normalizing data before loading it into info.csv
+- [X] consider NOT normalizing data before loading it into info.csv
 - [ ] [https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401](https://medium.com/mlearning-ai/apply-machine-learning-algorithms-for-genomics-data-classification-132972933723#c401) <-- read this
 - [X] fix gitignore not sensing contigs
-- [ ] consider restructuring models to handle without normalization and diff models for diff base pairings?
-- [ ] consider using different kmer lengths!!
+- [X] consider restructuring models to handle without normalization and diff models for diff base pairings?
+- [X] consider using different kmer lengths!!
 - [ ] purposely exclude ebola, other zoonotic viruses for validation

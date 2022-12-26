@@ -22,36 +22,29 @@ from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accu
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
 import validation_utils
+import data_utils
 
 def saveModel(model, name, X_test, y_test, params=None, dir='models/curr_models', gradBoost=False, xgBoost=False):
     if not path.exists(f"{dir}/{name}.pkl"):
         print("does not exist")
-
+        if not os.path.exists(f"{dir}"):
+            os.makedirs(f"{dir}")
         pickle.dump(model, open(f'{dir}/{name}.pkl', 'wb'))
     else:
-        predictions = model.predict(X_test)
-        currAcc = accuracy_score(y_test, predictions)
-
+        X_test = data_utils.transform_data(model, X_test)
+        currAcc = validation_utils.cross_validate(model, X_test, y_test)
+        
         pickled_model = pickle.load(open(f'{dir}/{name}.pkl', 'rb'))
         
-        if gradBoost:
-            # get features here 
-            cols_when_model_builds = pickled_model.feature_names_in_
-            X_test=X_test[cols_when_model_builds]
-        elif xgBoost:
-            # put features into the same order that the model was trained in
-            cols_when_model_builds = pickled_model.get_booster().feature_names
-            X_test=X_test[cols_when_model_builds]
-        
-        # .values?
-        
-        picklePredictions=pickled_model.predict(X_test)
-        pickleAcc=accuracy_score(y_test, picklePredictions)
+        X_test = data_utils.transform_data(pickled_model, X_test)
+
+        pickleAcc = validation_utils.cross_validate(pickled_model, X_test, y_test)
         
         if currAcc > pickleAcc:
             print("update!")
 
             # TP, FP, FN, TN
+            picklePredictions = pickled_model.predict(X_test)
             print(confusion_matrix(y_test, picklePredictions).ravel())
 
             print("curr", currAcc, "pickle", pickleAcc)
@@ -62,6 +55,7 @@ def saveModel(model, name, X_test, y_test, params=None, dir='models/curr_models'
         else:
             print("no update")
             print("curr", currAcc, "pickle", pickleAcc)
+            picklePredictions = pickled_model.predict(X_test)
             
             # TP, FP, FN, TN
             print(confusion_matrix(y_test, picklePredictions).ravel())

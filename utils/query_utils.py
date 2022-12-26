@@ -82,7 +82,7 @@ def getSingleSequence(accessionID) -> pd.DataFrame:
     # othergrad = pickle.load(open('models/curr_models/xgBoost.pkl', 'rb'))
     # print(model_utils.pred_res_proba(othergrad, kmer_df))
 
-def getFromSeq(X_info) -> pd.DataFrame:
+def getFromSeq(X_info, model) -> pd.DataFrame:
     kmer = 4
     s = product('acgt',repeat = kmer)
     permset = set(["".join(x) for x in list(s)])
@@ -96,5 +96,7 @@ def getFromSeq(X_info) -> pd.DataFrame:
         kmer_df.at[0, i]=oDict[i]
     # print(best_gradBoost.predict_proba(kmer_df))
     kmer_df = kmer_df.apply(lambda x: (x-x.min())/(x.max()-x.min()), axis=1)
+
+    kmer_df = data_utils.transform_data(model, kmer_df)
 
     return kmer_df

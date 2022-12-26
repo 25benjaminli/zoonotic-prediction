@@ -32,7 +32,7 @@ ROC curves
 """
 Tested cross val with auc curve, seems to work well
 """
-def draw_roc_curve(model, X_test, y_test):
+def draw_roc_curve(model, X_test, y_test, multiple=False):
     # implement Kfold cross validation before drawing ROC curve
     X_test = transform_data(model, X_test)
     y_thing = y_test
@@ -43,6 +43,13 @@ def draw_roc_curve(model, X_test, y_test):
     y_pred_proba = model.predict_proba(X_test)[::,1]
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     auc_thing = roc_auc_score(y_test, y_pred_proba)
+    print("roc: " + str(auc_thing))
+    if not multiple:
+        plt.plot(fpr,tpr,label="auc="+str(round(auc_thing, 3)))
+        plt.ylabel('True Positive Rate')
+        plt.xlabel('False Positive Rate')
+        plt.legend(loc=4)
+        plt.show()
 
     print(y_pred_proba)
     return fpr, tpr, auc_thing
@@ -52,7 +59,7 @@ def draw_roc_curve(model, X_test, y_test):
 
 def draw_roc_multiple(models, X_test, y_test):
     for key in models:
-        fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test)
+        fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test, multiple=True)
         plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
         
 
