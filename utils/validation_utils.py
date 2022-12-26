@@ -135,7 +135,7 @@ def cross_validate(model, X_test, y_test):
     print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
     tn, fp, fn, tp = confusion_matrix(y_test, model.predict(X_test)).ravel()
     print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
-    return mean(n_scores)
+    return round(mean(n_scores), 3)
 
 def cross_validate_multiple(models, X_test, y_test):
     obj = {}
