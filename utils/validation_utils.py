@@ -32,6 +32,66 @@ ROC curves
 """
 Tested cross val with auc curve, seems to work well
 """
+def draw_avg_roc_curve(model, X, y, multiple=False):
+    # done w/ the help of https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
+    
+    splits = 10
+    kf = KFold(n_splits=splits)
+    kf.get_n_splits(X)
+
+    tprs = []
+    base_fpr = np.linspace(0, 1, 101)
+
+    plt.figure(figsize=(5, 5))
+    plt.axes().set_aspect('equal', 'datalim')
+    avgauc = 0
+    for train, test in kf.split(X):
+        # print(train)
+        # print(test)
+        model = model.fit(X.iloc[train], y[train])
+        y_score = model.predict_proba(X.iloc[test])
+        fpr, tpr, _ = roc_curve(y[test], y_score[:, 1])
+        auc = roc_auc_score(y[test], y_score[:,1])
+        if not multiple:
+            # plot variance
+            plt.plot(fpr, tpr, 'b', alpha=0.15)
+        # print("before, ", tpr)
+        tpr = np.interp(base_fpr, fpr, tpr) # interpolate between fpr and tpr
+        tpr[0] = 0.0
+
+        # print("after, ", tpr)
+        tprs.append(tpr)
+        # print(auc, accuracy_score(y[test], model.predict(X.iloc[test])))
+        avgauc += auc
+    
+    avgauc /= splits
+
+    tprs = np.array(tprs)
+    
+    mean_tprs = tprs.mean(axis=0)
+    std = tprs.std(axis=0)
+    tprs_upper = np.minimum(mean_tprs + std, 1)
+    tprs_lower = mean_tprs - std
+
+    print(avgauc)
+
+    plt.plot(base_fpr, mean_tprs, 'b')
+    # fill in areas between
+    if not multiple:
+        plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
+    
+    plt.plot([0, 1], [0, 1],'r--', label="avg. auc="+str(round(avgauc, 3)))
+    plt.xlim([-0.01, 1.01])
+    plt.ylim([-0.01, 1.01])
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.show()
+
+def draw_avg_roc_multiple(models, X_test, y_test):
+    for key in models:
+        print(models[key])
+        draw_avg_roc_curve(models[key], X_test, y_test, multiple=True)
+
 def draw_roc_curve(model, X_test, y_test, multiple=False):
     # implement Kfold cross validation before drawing ROC curve
     X_test = transform_data(model, X_test)
@@ -55,7 +115,7 @@ def draw_roc_curve(model, X_test, y_test, multiple=False):
     return fpr, tpr, auc_thing
 
 
-    
+
 
 def draw_roc_multiple(models, X_test, y_test):
     for key in models:
@@ -189,4 +249,81 @@ def test():
     # ax.bar_label(p1, label_type='center')
 
     plt.show()
+def retrieveAllDatasets():
+    dataset1 = OrderedDict({})
 
+    dataset2 = OrderedDict({})
+
+    mergedDataset = OrderedDict({})
+
+    # load datasets with different kmer values
+    print("working directory: " + os.getcwd())
+    for kmer in range(3, 7):
+        df_1_reg = pd.read_csv(f'../data/dataset1/kmers-{str(kmer)}.csv')
+        df_1_norm = pd.read_csv(f'../data/dataset1/normalized-{str(kmer)}.csv')
+        df_2_reg = pd.read_csv(f'../data/dataset2/kmers-{str(kmer)}.csv')
+        df_2_norm = pd.read_csv(f'../data/dataset2/normalized-{str(kmer)}.csv')
+
+        df_reg_merge = pd.concat([df_1_reg, df_2_reg])
+        df_reg_merge.reset_index(drop=True, inplace=True)
+
+        df_norm_merge = pd.concat([df_1_norm, df_2_norm])
+        df_norm_merge.reset_index(drop=True, inplace=True)
+
+        print("kmer: " + str(kmer))
+
+        X_train, X_test, y_train, y_test = train_test_split(df_1_reg.loc[:, df_1_reg.columns != 'isZoonotic'], df_1_reg['isZoonotic'], test_size=0.2, random_state=1)
+        # for col in df.columns:
+        #     col != 'isZoonotic' and X_train[col].isnull().sum() != 0 and print(X_train[col].isnull().sum())
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+
+        dataset1[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+        X_train, X_test, y_train, y_test = train_test_split(df_1_norm.loc[:, df_1_norm.columns != 'isZoonotic'], df_1_norm['isZoonotic'], test_size=0.2, random_state=1)
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+
+        dataset1[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+        X_train, X_test, y_train, y_test = train_test_split(df_2_reg.loc[:, df_2_reg.columns != 'isZoonotic'], df_2_reg['isZoonotic'], test_size=0.2, random_state=1)
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+
+        dataset2[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+        X_train, X_test, y_train, y_test = train_test_split(df_2_norm.loc[:, df_2_norm.columns != 'isZoonotic'], df_2_norm['isZoonotic'], test_size=0.2, random_state=1)
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+
+        dataset2[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+
+        X_train, X_test, y_train, y_test = train_test_split(df_reg_merge.loc[:, df_reg_merge.columns != 'isZoonotic'], df_reg_merge['isZoonotic'], test_size=0.2, random_state=1)
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+
+        mergedDataset[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+        X_train, X_test, y_train, y_test = train_test_split(df_norm_merge.loc[:, df_norm_merge.columns != 'isZoonotic'], df_norm_merge['isZoonotic'], test_size=0.2, random_state=1)
+        y_train = y_train.values.ravel()
+        y_test = y_test.values.ravel()
+        
+        mergedDataset[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+    datasets = {"zhang": dataset1, "nardus": dataset2, "merged": mergedDataset}
+
+    return datasets
+
+
+merged_GBM = pickle.load(open('../models/test/nardus_gridsearch.pkl', 'rb')).best_estimator_
+nardus_GBM = pickle.load(open('../models/curr_models/nardus_gridsearch.pkl', 'rb')).best_estimator_
+di = {
+    'merged_GBM': merged_GBM,
+    'nardus_GBM': nardus_GBM
+}
+dataset = retrieveAllDatasets()['zhang']['normalized-4']
+X = pd.concat([dataset['X_train'], dataset['X_test']], axis=0)
+Y = np.concatenate([dataset['y_train'], dataset['y_test']], axis=0)
+
+draw_avg_roc_multiple(di, X, Y)
