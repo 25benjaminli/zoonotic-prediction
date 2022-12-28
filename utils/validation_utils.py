@@ -22,9 +22,10 @@ from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accu
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
-from data_utils import transform_data
+from data_utils import transform_data, retrieveAllDatasets
 from sklearn.model_selection import KFold
 from sklearn.metrics import plot_roc_curve
+import time
 """
 ROC curves
 """
@@ -32,29 +33,32 @@ ROC curves
 """
 Tested cross val with auc curve, seems to work well
 """
-def draw_avg_roc_curve(model, X, y, multiple=False):
+def draw_avg_roc_curve(model, name, X, y, multiple=False):
     # done w/ the help of https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
     
-    splits = 10
+    splits = 5
     kf = KFold(n_splits=splits)
     kf.get_n_splits(X)
 
     tprs = []
     base_fpr = np.linspace(0, 1, 101)
-
-    plt.figure(figsize=(5, 5))
-    plt.axes().set_aspect('equal', 'datalim')
+    
     avgauc = 0
     for train, test in kf.split(X):
+        # y_pred_proba = model.predict_proba(X.iloc[test])[::,1]
+        # fpr, tpr, _ = roc_curve(y[test], y_pred_proba)
+        # auc_thing = roc_auc_score(y[test], y_pred_proba)
+        # print("roc: " + str(auc_thing))
         # print(train)
         # print(test)
         model = model.fit(X.iloc[train], y[train])
+        print("fit done")
         y_score = model.predict_proba(X.iloc[test])
         fpr, tpr, _ = roc_curve(y[test], y_score[:, 1])
         auc = roc_auc_score(y[test], y_score[:,1])
         if not multiple:
             # plot variance
-            plt.plot(fpr, tpr, 'b', alpha=0.15)
+            plt.plot(fpr, tpr, alpha=0.15)
         # print("before, ", tpr)
         tpr = np.interp(base_fpr, fpr, tpr) # interpolate between fpr and tpr
         tpr[0] = 0.0
@@ -63,6 +67,7 @@ def draw_avg_roc_curve(model, X, y, multiple=False):
         tprs.append(tpr)
         # print(auc, accuracy_score(y[test], model.predict(X.iloc[test])))
         avgauc += auc
+        print("auc split: ", auc)
     
     avgauc /= splits
 
@@ -75,22 +80,29 @@ def draw_avg_roc_curve(model, X, y, multiple=False):
 
     print(avgauc)
 
-    plt.plot(base_fpr, mean_tprs, 'b')
+    plt.plot(base_fpr, mean_tprs, label=f"{name} avg. auc="+str(round(avgauc, 3)))
     # fill in areas between
     if not multiple:
         plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
     
-    plt.plot([0, 1], [0, 1],'r--', label="avg. auc="+str(round(avgauc, 3)))
-    plt.xlim([-0.01, 1.01])
-    plt.ylim([-0.01, 1.01])
-    plt.ylabel('True Positive Rate')
-    plt.xlabel('False Positive Rate')
-    plt.show()
+    if not multiple:
+        plt.show()
 
 def draw_avg_roc_multiple(models, X_test, y_test):
+    plt.plot([0, 1], [0, 1],'r--') # plot line for comparison
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    # plt.axes().set_aspect('equal', 'datalim')
+
     for key in models:
+        t = time.time()
         print(models[key])
-        draw_avg_roc_curve(models[key], X_test, y_test, multiple=True)
+        draw_avg_roc_curve(models[key], key, X_test, y_test, multiple=True)
+        print("time for CV: ", time.time() - t)
+        # plt.legend(loc='best')
+    plt.legend(loc='best', fontsize=8)
+    
+    plt.show()
 
 def draw_roc_curve(model, X_test, y_test, multiple=False):
     # implement Kfold cross validation before drawing ROC curve
@@ -121,7 +133,7 @@ def draw_roc_multiple(models, X_test, y_test):
     for key in models:
         fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test, multiple=True)
         plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
-        
+    plt.legend(loc='best')
 
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
@@ -141,14 +153,15 @@ def draw_accuracies(models, X_test, y_test, obj=None):
         plt.xticks(rotation=45)
         assert type(obj).__name__=='OrderedDict'
 
-        p1 = ax.bar([key for key in obj], [obj[key] for key in obj], width, align='center')
+        # sort dictionary by value
+        p1 = ax.bar([key for key in obj], [round(obj[key]*100, 3) for key in obj], width, align='center')
         # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
         vals = list(obj.values())
         for rect in range(len(p1)):
             print(vals[rect])
             height = p1[rect].get_height()
             ax.text(p1[rect].get_x() + p1[rect].get_width()/2., height,
-                    f'{vals[rect]}',
+                    f'{round(vals[rect]*100, 3)}%',
                     ha='center', va='bottom')
 
         ax.set_ylabel('Cross-Validated Accuracy')
@@ -194,15 +207,18 @@ def draw_feature_importances(model, X_test):
 CROSS VALIDATION FUNCTIONS
 """
 
-def cross_validate(model, X_test, y_test):
-    X_test = transform_data(model, X_test)
+def cross_validate(model, X, y, verb = 1):
+    X = transform_data(model, X)
 
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(model, X_test, y_test, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise', verbose=1)
+    cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=1)
+    n_scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise', verbose=verb)
     print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-    tn, fp, fn, tp = confusion_matrix(y_test, model.predict(X_test)).ravel()
-    print(f"tn: {tn}, fp: {fp}, fn: {fn}, tp: {tp}")
+    
     return round(mean(n_scores), 3)
+
+def get_conf_matrix(model, X_test, y_test):
+    y_pred = model.predict(X_test)
+    return confusion_matrix(y_test, y_pred)
 
 def cross_validate_multiple(models, X_test, y_test):
     obj = {}
@@ -249,81 +265,8 @@ def test():
     # ax.bar_label(p1, label_type='center')
 
     plt.show()
-def retrieveAllDatasets():
-    dataset1 = OrderedDict({})
 
-    dataset2 = OrderedDict({})
-
-    mergedDataset = OrderedDict({})
-
-    # load datasets with different kmer values
-    print("working directory: " + os.getcwd())
-    for kmer in range(3, 7):
-        df_1_reg = pd.read_csv(f'../data/dataset1/kmers-{str(kmer)}.csv')
-        df_1_norm = pd.read_csv(f'../data/dataset1/normalized-{str(kmer)}.csv')
-        df_2_reg = pd.read_csv(f'../data/dataset2/kmers-{str(kmer)}.csv')
-        df_2_norm = pd.read_csv(f'../data/dataset2/normalized-{str(kmer)}.csv')
-
-        df_reg_merge = pd.concat([df_1_reg, df_2_reg])
-        df_reg_merge.reset_index(drop=True, inplace=True)
-
-        df_norm_merge = pd.concat([df_1_norm, df_2_norm])
-        df_norm_merge.reset_index(drop=True, inplace=True)
-
-        print("kmer: " + str(kmer))
-
-        X_train, X_test, y_train, y_test = train_test_split(df_1_reg.loc[:, df_1_reg.columns != 'isZoonotic'], df_1_reg['isZoonotic'], test_size=0.2, random_state=1)
-        # for col in df.columns:
-        #     col != 'isZoonotic' and X_train[col].isnull().sum() != 0 and print(X_train[col].isnull().sum())
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset1[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_1_norm.loc[:, df_1_norm.columns != 'isZoonotic'], df_1_norm['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset1[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_2_reg.loc[:, df_2_reg.columns != 'isZoonotic'], df_2_reg['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset2[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_2_norm.loc[:, df_2_norm.columns != 'isZoonotic'], df_2_norm['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset2[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-
-        X_train, X_test, y_train, y_test = train_test_split(df_reg_merge.loc[:, df_reg_merge.columns != 'isZoonotic'], df_reg_merge['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        mergedDataset[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_norm_merge.loc[:, df_norm_merge.columns != 'isZoonotic'], df_norm_merge['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-        
-        mergedDataset[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-    datasets = {"zhang": dataset1, "nardus": dataset2, "merged": mergedDataset}
-
-    return datasets
-
-
-merged_GBM = pickle.load(open('../models/test/nardus_gridsearch.pkl', 'rb')).best_estimator_
-nardus_GBM = pickle.load(open('../models/curr_models/nardus_gridsearch.pkl', 'rb')).best_estimator_
-di = {
-    'merged_GBM': merged_GBM,
-    'nardus_GBM': nardus_GBM
-}
-dataset = retrieveAllDatasets()['zhang']['normalized-4']
-X = pd.concat([dataset['X_train'], dataset['X_test']], axis=0)
-Y = np.concatenate([dataset['y_train'], dataset['y_test']], axis=0)
-
-draw_avg_roc_multiple(di, X, Y)
+# model = pickle.load(open("../models/curr_models/stacking.pkl", "rb"))
+# datasets = retrieveAllDatasets(dir="../data")
+# ds = datasets['merged']['normalized-4']
+# draw_avg_roc_curve(model, "stacked", pd.concat([ds['X_train'], ds['X_test']], axis=0), np.concatenate([ds['y_train'], ds['y_test']], axis=0))

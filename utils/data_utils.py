@@ -79,7 +79,7 @@ def transform_data(model, X_test):
 
     return X_test
 
-def retrieveAllDatasets():
+def retrieveAllDatasets(dir = "data"):
     dataset1 = OrderedDict({})
 
     dataset2 = OrderedDict({})
@@ -89,10 +89,10 @@ def retrieveAllDatasets():
     # load datasets with different kmer values
     print("working directory: " + os.getcwd())
     for kmer in range(3, 7):
-        df_1_reg = pd.read_csv(f'data/dataset1/kmers-{str(kmer)}.csv')
-        df_1_norm = pd.read_csv(f'data/dataset1/normalized-{str(kmer)}.csv')
-        df_2_reg = pd.read_csv(f'data/dataset2/kmers-{str(kmer)}.csv')
-        df_2_norm = pd.read_csv(f'data/dataset2/normalized-{str(kmer)}.csv')
+        df_1_reg = pd.read_csv(f'{dir}/dataset1/kmers-{str(kmer)}.csv')
+        df_1_norm = pd.read_csv(f'{dir}/dataset1/normalized-{str(kmer)}.csv')
+        df_2_reg = pd.read_csv(f'{dir}/dataset2/kmers-{str(kmer)}.csv')
+        df_2_norm = pd.read_csv(f'{dir}/dataset2/normalized-{str(kmer)}.csv')
 
         df_reg_merge = pd.concat([df_1_reg, df_2_reg])
         df_reg_merge.reset_index(drop=True, inplace=True)
