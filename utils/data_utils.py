@@ -80,14 +80,11 @@ def transform_data(model, X_test):
     return X_test
 
 def retrieveAllDatasets(dir = "data"):
-    dataset1 = OrderedDict({})
-
-    dataset2 = OrderedDict({})
-
-    mergedDataset = OrderedDict({})
+    datasets = OrderedDict({"zhang":{}, "nardus":{}, "merged":{}})
 
     # load datasets with different kmer values
     print("working directory: " + os.getcwd())
+
     for kmer in range(3, 7):
         df_1_reg = pd.read_csv(f'{dir}/dataset1/kmers-{str(kmer)}.csv')
         df_1_norm = pd.read_csv(f'{dir}/dataset1/normalized-{str(kmer)}.csv')
@@ -96,51 +93,46 @@ def retrieveAllDatasets(dir = "data"):
 
         df_reg_merge = pd.concat([df_1_reg, df_2_reg])
         df_reg_merge.reset_index(drop=True, inplace=True)
+        df_reg_merge.drop_duplicates(inplace=True)
 
         df_norm_merge = pd.concat([df_1_norm, df_2_norm])
         df_norm_merge.reset_index(drop=True, inplace=True)
+        df_norm_merge.drop_duplicates(inplace=True)
 
+        l = [[df_1_reg, df_1_norm], [df_2_reg, df_2_norm], [df_reg_merge, df_norm_merge]]
         print("kmer: " + str(kmer))
-
-        X_train, X_test, y_train, y_test = train_test_split(df_1_reg.loc[:, df_1_reg.columns != 'isZoonotic'], df_1_reg['isZoonotic'], test_size=0.2, random_state=1)
-        # for col in df.columns:
-        #     col != 'isZoonotic' and X_train[col].isnull().sum() != 0 and print(X_train[col].isnull().sum())
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset1[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_1_norm.loc[:, df_1_norm.columns != 'isZoonotic'], df_1_norm['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset1[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_2_reg.loc[:, df_2_reg.columns != 'isZoonotic'], df_2_reg['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset2[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_2_norm.loc[:, df_2_norm.columns != 'isZoonotic'], df_2_norm['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        dataset2[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+        print('zhang reg', len(df_1_reg))
+        print('zhang norm', len(df_1_norm))
+        print('nardus reg', len(df_2_reg))
+        print('nardus norm', len(df_2_norm))
+        print('merge reg', len(df_reg_merge))
+        print('merge norm', len(df_norm_merge))
 
 
-        X_train, X_test, y_train, y_test = train_test_split(df_reg_merge.loc[:, df_reg_merge.columns != 'isZoonotic'], df_reg_merge['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
-
-        mergedDataset[f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
-
-        X_train, X_test, y_train, y_test = train_test_split(df_norm_merge.loc[:, df_norm_merge.columns != 'isZoonotic'], df_norm_merge['isZoonotic'], test_size=0.2, random_state=1)
-        y_train = y_train.values.ravel()
-        y_test = y_test.values.ravel()
+        dstypes = ["zhang", "nardus", "merged"]
         
-        mergedDataset[f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+        for i, dataset in enumerate(l):
+            reg_dataset, norm_dataset = dataset[0], dataset[1]
+            
+            X_train, X_test, y_train, y_test = train_test_split(reg_dataset.loc[:, reg_dataset.columns != 'isZoonotic'], reg_dataset['isZoonotic'], test_size=0.2, random_state=42)
+            # split into validation
+            # X_test, X_val, y_test, y_val = train_test_split(X_rem, y_rem, test_size=0.5, random_state=42)
+            
+            y_train = y_train.values.ravel()
+            y_test = y_test.values.ravel()
+            # y_val = y_val.values.ravel()
 
-    datasets = {"zhang": dataset1, "nardus": dataset2, "merged": mergedDataset}
+            datasets[dstypes[i]][f'regular-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
+            X_train, X_test, y_train, y_test = train_test_split(norm_dataset.loc[:, norm_dataset.columns != 'isZoonotic'], norm_dataset['isZoonotic'], test_size=0.2, random_state=42)
+            # split into validation
+            # X_test, X_val, y_test, y_val = train_test_split(X_rem, y_rem, test_size=0.5, random_state=42)
+
+            y_train = y_train.values.ravel()
+            y_test = y_test.values.ravel()
+            # y_val = y_val.values.ravel()
+
+            datasets[dstypes[i]][f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
+
 
     return datasets

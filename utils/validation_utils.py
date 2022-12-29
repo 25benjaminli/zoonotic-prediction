@@ -106,6 +106,8 @@ def draw_avg_roc_multiple(models, X_test, y_test):
 
 def draw_roc_curve(model, X_test, y_test, multiple=False):
     # implement Kfold cross validation before drawing ROC curve
+    plt.ylim(50, 101)
+    
     X_test = transform_data(model, X_test)
     y_thing = y_test
     precision, recall, thresholds = precision_recall_curve(y_thing, model.predict_proba(X_test)[::,1])
@@ -144,32 +146,43 @@ def draw_accuracies(models, X_test, y_test, obj=None):
     if obj is None:
         plt.tick_params(axis='x', which='major', labelsize=10)
         plt.xticks(rotation=90)
+        
 
         plt.bar([key for key in models], [cross_validate(models[key], X_test, y_test) for key in models])
         plt.show()
     else:
-        fig, ax = plt.subplots()
-        width = 0.35
-        plt.xticks(rotation=45)
+        
+        fig, ax = plt.subplots(figsize=(10, 3.5))
+        # width = 0.35
+        # plt.yticks(rotation=30)
+        plt.xlim(50, 101)
+        plt.yticks(rotation=30)
+        # plt.yticks([50, 60, 70, 80, 90, 100])
         assert type(obj).__name__=='OrderedDict'
-
+        
         # sort dictionary by value
-        p1 = ax.bar([key for key in obj], [round(obj[key]*100, 3) for key in obj], width, align='center')
+        # color=['black', 'red', 'green', 'blue', 'cyan']
+        p1 = ax.barh([key for key in obj], [round(obj[key]*100, 3) for key in obj], edgecolor='black')
         # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
         vals = list(obj.values())
         for rect in range(len(p1)):
-            print(vals[rect])
-            height = p1[rect].get_height()
-            ax.text(p1[rect].get_x() + p1[rect].get_width()/2., height,
+            # print(vals[rect])
+            bar = p1[rect]
+            width = bar.get_width()+2 #Previously we got the height
+            label_y_pos = bar.get_y() + bar.get_height() / 2
+            print(width, label_y_pos)
+            ax.text(width, label_y_pos,
                     f'{round(vals[rect]*100, 3)}%',
-                    ha='center', va='bottom')
+                    ha='center', va='bottom', fontsize=10)
 
-        ax.set_ylabel('Cross-Validated Accuracy')
+        ax.set_xlabel('Cross-Validated Accuracy')
         ax.set_title('Scores by model')
-        ax.set_xlabel('Model Type')
-
+        ax.set_ylabel('Model Type')
+        # plt.xlim(, 101)
+        # plt.ylim(50, 101)
         # ax.set_xticks(ind, labels=["1", "2", "3", "4", "5"])
-        ax.legend(loc=4)
+        plt.legend(loc=4)
+        plt.show()
 
 
 """
@@ -207,11 +220,11 @@ def draw_feature_importances(model, X_test):
 CROSS VALIDATION FUNCTIONS
 """
 
-def cross_validate(model, X, y, verb = 1):
+def cross_validate(model, X, y, verb = 1, scoring = 'accuracy'):
     X = transform_data(model, X)
 
     cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise', verbose=verb)
+    n_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv, n_jobs=-1, error_score='raise', verbose=verb)
     print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
     
     return round(mean(n_scores), 3)
@@ -226,47 +239,3 @@ def cross_validate_multiple(models, X_test, y_test):
         obj[key] = cross_validate(models[key], X_test, y_test)
     
     return obj
-    
-
-def test():
-    obj = OrderedDict({
-    "nardus": 0.98,
-    "xgboost": 0.99,
-    "gradboost": 0.98,
-    "randomforest": 0.96,
-    "logisticregression": 0.9,
-    "mlp": 0.97,
-    "svm": 0.94,
-    "regnard": 0.94
-    })
-    fig, ax = plt.subplots()
-    width = 0.35
-    plt.xticks(rotation=90)
-    assert type(obj).__name__=='OrderedDict'
-
-    p1 = ax.bar([key for key in obj], [obj[key] for key in obj], width, align='center')
-    # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
-    vals = list(obj.values())
-    for rect in range(len(p1)):
-        print(vals[rect])
-        height = p1[rect].get_height()
-        ax.text(p1[rect].get_x() + p1[rect].get_width()/2.,height,
-                f'{vals[rect]}',
-                ha='center', va='bottom')
-
-    ax.set_ylabel('Cross-Validated Accuracy')
-    ax.set_title('Scores by model')
-    ax.set_xlabel('Model Type')
-
-    # ax.set_xticks(ind, labels=["1", "2", "3", "4", "5"])
-    ax.legend(loc=4)
-
-    # Label with label_type 'center' instead of the default 'edge'
-    # ax.bar_label(p1, label_type='center')
-
-    plt.show()
-
-# model = pickle.load(open("../models/curr_models/stacking.pkl", "rb"))
-# datasets = retrieveAllDatasets(dir="../data")
-# ds = datasets['merged']['normalized-4']
-# draw_avg_roc_curve(model, "stacked", pd.concat([ds['X_train'], ds['X_test']], axis=0), np.concatenate([ds['y_train'], ds['y_test']], axis=0))
