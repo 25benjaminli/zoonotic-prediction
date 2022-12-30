@@ -35,7 +35,7 @@ Tested cross val with auc curve, seems to work well
 """
 def draw_avg_roc_curve(model, name, X, y, multiple=False):
     # done w/ the help of https://stats.stackexchange.com/questions/186337/average-roc-for-repeated-10-fold-cross-validation-with-probability-estimates
-    
+    plt.ylim(0.50, 1.01)
     splits = 5
     kf = KFold(n_splits=splits)
     kf.get_n_splits(X)
@@ -80,37 +80,43 @@ def draw_avg_roc_curve(model, name, X, y, multiple=False):
 
     print(avgauc)
 
-    plt.plot(base_fpr, mean_tprs, label=f"{name} avg. auc="+str(round(avgauc, 3)))
+    if name.lower() == "ensemble":
+        plt.plot(base_fpr, mean_tprs, label=f"{name}", color="red")
+    else:
+        plt.plot(base_fpr, mean_tprs, label=f"{name}")
     # fill in areas between
     if not multiple:
         plt.fill_between(base_fpr, tprs_lower, tprs_upper, color='grey', alpha=0.3)
     
     if not multiple:
         plt.show()
+    
+    return round(avgauc, 3)
 
 def draw_avg_roc_multiple(models, X_test, y_test):
     plt.plot([0, 1], [0, 1],'r--') # plot line for comparison
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
     # plt.axes().set_aspect('equal', 'datalim')
-
+    l = []
     for key in models:
         t = time.time()
         print(models[key])
-        draw_avg_roc_curve(models[key], key, X_test, y_test, multiple=True)
+        l.append(draw_avg_roc_curve(models[key], key, X_test, y_test, multiple=True))
         print("time for CV: ", time.time() - t)
         # plt.legend(loc='best')
     plt.legend(loc='best', fontsize=8)
     
     plt.show()
+    return l
 
-def draw_roc_curve(model, X_test, y_test, multiple=False):
+def draw_roc_curve(model, name, X_test, y_test, multiple=False):
     # implement Kfold cross validation before drawing ROC curve
-    plt.ylim(50, 101)
+    plt.ylim(0.50, 1.01)
     
     X_test = transform_data(model, X_test)
     y_thing = y_test
-    precision, recall, thresholds = precision_recall_curve(y_thing, model.predict_proba(X_test)[::,1])
+    precision, recall, thresholds = precision_recall_curve(y_thing, model.predict_proba(X_test)[:,1])
     aaa = auc(recall, precision)
     print("precision recall: " + str(aaa))
 
@@ -118,8 +124,11 @@ def draw_roc_curve(model, X_test, y_test, multiple=False):
     fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
     auc_thing = roc_auc_score(y_test, y_pred_proba)
     print("roc: " + str(auc_thing))
+    
     if not multiple:
-        plt.plot(fpr,tpr,label="auc="+str(round(auc_thing, 3)))
+        
+        # label="auc="+str(round(auc_thing, 3)
+        plt.plot(fpr,tpr)
         plt.ylabel('True Positive Rate')
         plt.xlabel('False Positive Rate')
         plt.legend(loc=4)
@@ -129,12 +138,50 @@ def draw_roc_curve(model, X_test, y_test, multiple=False):
     return fpr, tpr, auc_thing
 
 
+def draw_prec_roc_curve(model, name, X_test, y_test, multiple=False):
+    # implement Kfold cross validation before drawing ROC curve
+    plt.ylim(0.50, 1.01)
+    
+    X_test = transform_data(model, X_test)
+    y_thing = y_test
+    precision, recall, thresholds = precision_recall_curve(y_thing, model.predict_proba(X_test)[:,1])
+    aaa = auc(recall, precision)
+    print("precision recall: " + str(aaa))
 
+    if not multiple:
+        
+        # label="auc="+str(round(auc_thing, 3)
+        plt.plot(recall,precision)
+        plt.ylabel('Precision')
+        plt.xlabel('Recall')
+        plt.legend(loc=4)
+        plt.show()
+
+    return precision, recall
+
+def draw_prec_roc_curve_multiple(models, X_test, y_test):
+    for key in models:
+        precision, recall = draw_prec_roc_curve(models[key], key, X_test, y_test, multiple=True)
+        if key.lower() == "ensemble":
+            plt.plot(recall, precision, color="red")
+        else:
+            plt.plot(recall, precision)
+        # plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
+    plt.legend(loc='best')
+
+    plt.ylabel('Precision')
+    plt.xlabel('Recall')
+    plt.legend(loc=4)
+    plt.show()
 
 def draw_roc_multiple(models, X_test, y_test):
     for key in models:
-        fpr, tpr, auc = draw_roc_curve(models[key], X_test, y_test, multiple=True)
-        plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
+        fpr, tpr, auc = draw_roc_curve(models[key], key, X_test, y_test, multiple=True)
+        if key.lower() == "ensemble":
+            plt.plot(fpr, tpr, color="red")
+        else:
+            plt.plot(fpr, tpr)
+        # plt.plot(fpr,tpr,label=f"{key}, auc="+str(round(auc, 3)))
     plt.legend(loc='best')
 
     plt.ylabel('True Positive Rate')
@@ -162,7 +209,7 @@ def draw_accuracies(models, X_test, y_test, obj=None):
         
         # sort dictionary by value
         # color=['black', 'red', 'green', 'blue', 'cyan']
-        p1 = ax.barh([key for key in obj], [round(obj[key]*100, 3) for key in obj], edgecolor='black')
+        p1 = ax.barh([key for key in obj], [round(obj[key]*100, 3) for key in obj], edgecolor='black', color=['red' if key.lower() == "ensemble" else 'blue' for key in obj])
         # p2 = ax.bar(ind + width/2, [obj[key] for key in obj], width, label='Accuracy')
         vals = list(obj.values())
         for rect in range(len(p1)):
@@ -239,3 +286,36 @@ def cross_validate_multiple(models, X_test, y_test):
         obj[key] = cross_validate(models[key], X_test, y_test)
     
     return obj
+    
+
+
+# datasets = retrieveAllDatasets(dir="../data")
+# ds = datasets['merged']['normalized-4']
+# merged_GBM = pickle.load(open('../models/curr_models/nardus_gridsearch.pkl', 'rb'))
+# # # asdf = pickle.load(open('../models/curr_models/knn.pkl', 'rb'))
+
+# em = pickle.load(open('../models/curr_models/final_merged_stackingcv.pkl', 'rb'))
+
+# bestandworst = OrderedDict({
+#     # 'merged_ensemble': em,
+#     'ensemble': em,
+#     'knn': merged_GBM.best_estimator_
+    
+# })
+
+# # # # # scores_merged = [0.938, 0.943]
+# # # draw_roc_multiple(bestandworst, ds['X_test'], ds['y_test'])
+
+# # # # merged_dc = OrderedDict(sorted(OrderedDict(map(lambda i,j : (i,j) , bestandworst.keys(),scores_merged)).items(), key=lambda x: x[1], reverse=True))
+
+# # # draw_avg_roc_multiple(bestandworst, ds['X_test'], ds['y_test'])
+# # # # test()
+
+# # draw_prec_roc_curve_multiple(bestandworst, ds['X_test'], ds['y_test'])
+# scores_merged = [0.99, 0.98]
+# merged_dc = OrderedDict(sorted(OrderedDict(map(lambda i,j : (i,j) , bestandworst.keys(),scores_merged)).items(), key=lambda x: x[1], reverse=True))
+# # nardus_dc = OrderedDict(sorted(OrderedDict(map(lambda i,j : (i,j) , bestandworst.keys(),scores_nardus)).items(), key=lambda x: x[1], reverse=True))
+# # zhang_dc = OrderedDict(sorted(OrderedDict(map(lambda i,j : (i,j) , bestandworst.keys(),scores_zhang)).items(), key=lambda x: x[1], reverse=True))
+# print(merged_dc)
+# draw_accuracies(bestandworst, None, None, merged_dc)
+# draw_accuracies(bestandworst, ds['X_test'], ds['y_test'])
