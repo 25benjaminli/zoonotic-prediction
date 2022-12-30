@@ -79,7 +79,7 @@ def transform_data(model, X_test):
 
     return X_test
 
-def retrieveAllDatasets(dir = "data"):
+def retrieveAllDatasets(dir = "data", verb=False):
     datasets = OrderedDict({"zhang":{}, "nardus":{}, "merged":{}})
 
     # load datasets with different kmer values
@@ -100,14 +100,14 @@ def retrieveAllDatasets(dir = "data"):
         df_norm_merge.drop_duplicates(inplace=True)
 
         l = [[df_1_reg, df_1_norm], [df_2_reg, df_2_norm], [df_reg_merge, df_norm_merge]]
-        print("kmer: " + str(kmer))
-        print('zhang reg', len(df_1_reg))
-        print('zhang norm', len(df_1_norm))
-        print('nardus reg', len(df_2_reg))
-        print('nardus norm', len(df_2_norm))
-        print('merge reg', len(df_reg_merge))
-        print('merge norm', len(df_norm_merge))
-
+        if verb:
+            print("kmer: " + str(kmer))
+            print('zhang reg', len(df_1_reg))
+            print('zhang norm', len(df_1_norm))
+            print('nardus reg', len(df_2_reg))
+            print('nardus norm', len(df_2_norm))
+            print('merge reg', len(df_reg_merge))
+            print('merge norm', len(df_norm_merge))
 
         dstypes = ["zhang", "nardus", "merged"]
         
