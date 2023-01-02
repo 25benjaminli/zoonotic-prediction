@@ -1,0 +1,73 @@
+
+
+## XGBoost
+
+### length scores
+test_recall 0.7068696675492792
+test_f1 0.7586778607211537
+test_accuracy 0.9347888218692934
+test_precision 0.8194606784109102
+test_roc_auc 0.9593911065308494
+test_neg_brier_score -0.04959260773120366
+
+### normalized
+test_recall 0.6814788024914608
+test_f1 0.7496350569034831
+test_accuracy 0.9328405213623485
+test_precision 0.8332139922699078
+test_roc_auc 0.9507882942855816
+test_neg_brier_score -0.05504633384992509
+
+
+### length scores for balanced bagging
+test_recall 0.9098558399529274
+test_f1 0.6424611273925788
+test_accuracy 0.8529227602235625
+test_precision 0.49669455630566306
+test_roc_auc 0.9542965514269435
+test_neg_brier_score -0.10227651204934585
+
+### normalized scores for balanced bagging
+test_recall 0.8680148683946152
+test_f1 0.6427690319255424
+test_accuracy 0.8576247489233305
+test_precision 0.5105080834667619
+test_roc_auc 0.9454989666752777
+test_neg_brier_score -0.10107297645545728
+
+
+
+## SVC
+
+### length scores
+test_recall 0.5875530618249064
+test_f1 0.7182458180138032
+test_accuracy 0.9331893973770129
+test_precision 0.9245079090277123
+test_roc_auc 0.8927398862196163
+test_neg_brier_score -0.05732165896907425
+
+### normalized
+test_recall 0.673845690174804
+test_f1 0.767535824868738
+test_accuracy 0.9397716408353727
+test_precision 0.8923775380892358
+test_roc_auc 0.9390206598705694
+test_neg_brier_score -0.04901245938818595
+
+### length with bagging
+test_recall 0.8605745387298785
+test_f1 0.6591193454517312
+test_accuracy 0.8707077638204858
+test_precision 0.5342649455085573
+test_roc_auc 0.9390341111921547
+test_neg_brier_score -0.08888671894900275
+
+### normalized with bagging
+
+test_recall 0.7804681535061281
+test_f1 0.7435881522539062
+test_accuracy 0.9205700865721127
+test_precision 0.7102118424630024
+test_roc_auc 0.9511676271287482
+test_neg_brier_score -0.061181144117573416

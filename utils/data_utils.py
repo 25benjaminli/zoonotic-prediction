@@ -134,5 +134,32 @@ def retrieveAllDatasets(dir = "data", verb=False):
 
             datasets[dstypes[i]][f'normalized-{kmer}'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
 
+    
+    lengthdivdataset = pd.read_csv(f'{dir}/merged/lengthdiv-4.csv')
+    print(lengthdivdataset.head())
+    X_train, X_test, y_train, y_test = train_test_split(lengthdivdataset.loc[:, lengthdivdataset.columns != 'isZoonotic'], lengthdivdataset['isZoonotic'], test_size=0.2, random_state=42)
+    # split into validation
+    # X_test, X_val, y_test, y_val = train_test_split(X_rem, y_rem, test_size=0.5, random_state=42)
+
+    y_train = y_train.values.ravel()
+    y_test = y_test.values.ravel()
+    # y_val = y_val.values.ravel()
+
+    datasets['merged']['lengthdivdataset-4'] = {'X_train': X_train, 'X_test': X_test, 'y_train': y_train, 'y_test': y_test}
 
     return datasets
+
+def retrieveMerged(dir='../data'):
+    print("working directory: " + os.getcwd())
+    dataset = {}
+    for kmer in range(3, 7):
+        lengthdivdataset = pd.read_csv(f'{dir}/merged/lengthdiv-{kmer}.csv')
+        normalizeddataset = pd.read_csv(f'{dir}/merged/normalized-{kmer}.csv')
+        regulardataset = pd.read_csv(f'{dir}/merged/kmers-{kmer}.csv')
+        # y_val = y_val.values.ravel()
+
+        dataset[f'f1-{kmer}'] = {'X': regulardataset.loc[:, regulardataset.columns != 'isZoonotic'], 'y': regulardataset['isZoonotic'].ravel()}
+        dataset[f'f2-{kmer}'] = {'X': normalizeddataset.loc[:, normalizeddataset.columns != 'isZoonotic'], 'y': normalizeddataset['isZoonotic'].ravel()}
+        dataset[f'f3-{kmer}'] = {'X': lengthdivdataset.loc[:, lengthdivdataset.columns != 'isZoonotic'], 'y': lengthdivdataset['isZoonotic'].ravel()}
+    return dataset
+# retrieveAllDatasets(dir='../data')

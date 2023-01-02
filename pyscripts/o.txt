@@ -1,2 +1,1 @@
-zoonotic potential of NC_025403.1
-: 3.719%
+zoonotic potential of NC_039345.1: 36.64%

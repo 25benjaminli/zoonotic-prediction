@@ -9,7 +9,7 @@ from itertools import permutations, product
 sys.path.append('..')
 from utils import data_utils
 from warnings import simplefilter
-
+from Bio import SeqIO
 # ignore performance warning
 simplefilter(action="ignore", category=pd.errors.PerformanceWarning)
 simplefilter(action='ignore', category=FutureWarning)
@@ -39,7 +39,7 @@ parser = argparse.ArgumentParser(
                     description = 'select a model')
 
 parser.add_argument('--model', type=str, help='path to model')
-parser.add_argument('--data', type=str, help='txt file with sequence to predict - formatted in such a way that ID & Sequence alternate')
+parser.add_argument('--data', type=str, help='fasta file')
 parser.add_argument('--output', type=str, help='output file name')
 
 args = parser.parse_args()
@@ -51,27 +51,27 @@ data = args.data
 output = args.output
 
 model = pickle.load(open(model, 'rb'))
-ct = 0
-seenId = ""
-for line in open(data, 'r').readlines():
-    print("hi")
-    if ct % 2 != 0:
-        print(type(line))
-        realmodel = model
-        # if it is a gridsearch model
-        try:
-            realmodel = model.best_estimator_
-        except:
-            pass
-        
-        df = getFromSeq(realmodel, line)
-        print(df)
-        res = realmodel.predict_proba(df)[:,1]
-        # print(res)
-        with open(output, 'w') as f:
-            s = f"zoonotic potential of {seenId}: " + str(round(res[0]*100, 3)) + "%"
-            f.write(s)
-            f.close()
-    else:
-        seenId = line
-        ct+=1
+
+fasta_sequences = SeqIO.parse(open(data, 'r'),'fasta')
+print(fasta_sequences)
+for fasta in fasta_sequences:
+    # print(fastas)
+    realmodel = model
+    # if it is a gridsearch model
+    try:
+        realmodel = model.best_estimator_
+    except:
+        pass
+    print('fasta', fasta)
+    # print(vars(fasta))
+    df = getFromSeq(realmodel, fasta.seq)
+    print(df)
+    res = realmodel.predict_proba(df)[:,1]
+    print(realmodel.predict(df))
+    # print(res)
+    with open(output, 'w') as f:
+        s = f"zoonotic potential of {fasta.id}: " + str(round(res[0]*100, 3)) + "%"
+        print(round(res[0]*100, 3))
+        f.write(s)
+        f.close()
+# python pred_seq.py --model models/curr_models/em-test.pkl --data test.txt --output o.txt

@@ -288,7 +288,35 @@ def cross_validate_multiple(models, X_test, y_test):
     return obj
     
 
+# def cross_validate_multiple_metrics(model, X, y):
+#     X = transform_data(model, X)
+#     di = {
+#         'accuracy': (accuracy_score, {}),
+#         'precision': (precision_score, {'average': 'macro'}),
+#         'recall': (recall_score, {'average': 'macro'}),
+#         'f1': (f1_score, {'average': 'macro'}),
+#         'roc_auc': (roc_auc_score, {'average': 'macro'})
+#     }
 
+#     for s in scoring:
+#         if s not in di:
+#             print(f"Scoring metric {s} not supported")
+#             return
+#     # 
+#     realdi = {
+#         s: di[s] for s in scoring
+#     }
+#     print(realdi)
+#     scorer = MultiScorer(realdi)
+
+
+#     cv = RepeatedStratifiedKFold(n_splits=splits, n_repeats=3, random_state=1)
+#     n_scores = cross_val_score(model, X, y, scoring=scorer, cv=cv, n_jobs=-1, error_score='raise', verbose=verb)
+#     # print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
+#     print(scorer)
+#     # pickle.dump(scorer, open('scorer.pkl', 'wb'))
+    
+#     return n_scores, scorer
 # datasets = retrieveAllDatasets(dir="../data")
 # ds = datasets['merged']['normalized-4']
 # merged_GBM = pickle.load(open('../models/curr_models/nardus_gridsearch.pkl', 'rb'))
