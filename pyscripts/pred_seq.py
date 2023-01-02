@@ -7,7 +7,8 @@ import pandas as pd
 from itertools import permutations, product
 
 sys.path.append('..')
-from utils import data_utils
+import utils.data_utils as data_utils
+from utils.StackingClassifier import StackingClassifier
 from warnings import simplefilter
 from Bio import SeqIO
 # ignore performance warning

@@ -9,7 +9,7 @@ from itertools import permutations, product
 from sklearn.metrics import accuracy_score, confusion_matrix, balanced_accuracy_score
 import tqdm
 import numpy as np
-from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split, cross_val_score
+from sklearn.model_selection import RepeatedStratifiedKFold, train_test_split, cross_val_score, cross_validate
 
 from numpy import mean
 from numpy import std
@@ -18,7 +18,7 @@ from os import path
 from sklearn.model_selection import cross_val_score
 from warnings import simplefilter
 from collections import OrderedDict
-from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accuracy_score, precision_recall_curve, auc, roc_curve, roc_auc_score
+from sklearn.metrics import accuracy_score, auc, confusion_matrix, balanced_accuracy_score, precision_recall_curve, auc, roc_curve, roc_auc_score, recall_score, precision_score, f1_score, brier_score_loss
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import matplotlib.pyplot as plt
@@ -26,6 +26,7 @@ from data_utils import transform_data, retrieveAllDatasets
 from sklearn.model_selection import KFold
 from sklearn.metrics import plot_roc_curve
 import time
+
 """
 ROC curves
 """
@@ -267,25 +268,50 @@ def draw_feature_importances(model, X_test):
 CROSS VALIDATION FUNCTIONS
 """
 
-def cross_validate(model, X, y, verb = 1, scoring = 'accuracy'):
+def cross_val(model, X, y, verb = 1, scoring = ['recall', 'f1', 'accuracy', 'precision', 'roc_auc', 'neg_brier_score'], cv=5):
     X = transform_data(model, X)
+    # check if it is xgboost
+    scoredi = {
+        'recall': recall_score,
+        'f1': f1_score,
+        'accuracy': accuracy_score,
+        'precision': precision_score,
+        'roc_auc': roc_auc_score,
+        'neg_brier_score': brier_score_loss
+    }
+    di = {}
+    if type(model).__name__ == "XGBClassifier":
+        # perform manual k fold validation with extra stopping
+        kf = KFold(n_splits=cv)
+        kf.get_n_splits(X)
 
-    cv = RepeatedStratifiedKFold(n_splits=5, n_repeats=3, random_state=1)
-    n_scores = cross_val_score(model, X, y, scoring=scoring, cv=cv, n_jobs=-1, error_score='raise', verbose=verb)
-    print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-    
-    return round(mean(n_scores), 3)
+        tprs = []
+        base_fpr = np.linspace(0, 1, 101)
+        
+        avgauc = 0
+        for train, test in kf.split(X):
+            # divide train into train and validation
+            X_train, X_val, y_train, y_val = train_test_split(X.iloc[train], y[train], test_size=0.25)
+            model = model.fit(X_train, y_train, eval_metric='aucpr', eval_set=[(X_val, y_val)], early_stopping_rounds=10, verbose=10)
+            y_pred = model.predict_proba(X.iloc[test])[:, 1]
+            for score in scoring:
+                di[score] = di.get(score, []).append(scoredi[score](y.iloc[test], y_pred))
+        
+        # return mean of all scores
+        for k, v in di.items():
+            di[k] = round(np.mean(v), 3)
+
+
+    print("cross validating", cv, "times")
+    x = cross_validate(model, X, y, cv=cv, scoring=scoring)
+    for k, v in x.items():
+        print(k, round(v.mean(), 3))
+        di[k]=round(v.mean(), 3)
+    return di
 
 def get_conf_matrix(model, X_test, y_test):
     y_pred = model.predict(X_test)
     return confusion_matrix(y_test, y_pred)
-
-def cross_validate_multiple(models, X_test, y_test):
-    obj = {}
-    for key in models:
-        obj[key] = cross_validate(models[key], X_test, y_test)
-    
-    return obj
     
 
 # def cross_validate_multiple_metrics(model, X, y):
