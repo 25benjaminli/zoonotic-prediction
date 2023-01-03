@@ -20,4 +20,4 @@
 - [X] fix gitignore not sensing contigs
 - [X] consider restructuring models to handle without normalization and diff models for diff base pairings?
 - [X] consider using different kmer lengths!!
-- [ ] purposely exclude ebola, other zoonotic viruses for validation
+- [] fix ensemble model predicting probabilities really wide ranging 
