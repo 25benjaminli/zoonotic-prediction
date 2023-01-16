@@ -17,12 +17,12 @@ simplefilter(action='ignore', category=FutureWarning)
 
 def getFromSeq(model, X_info) -> pd.DataFrame:
     kmer = 4
-    s = product('acgt',repeat = kmer)
-    permset = set(["".join(x) for x in list(s)])
+    
     X_info = X_info.lower()
 
-    oDict = data_utils.assign_kmers_to_dict(X_info, permset, kmer) # convert ordereddict to pandas dataframe
+    oDict = data_utils.assign_kmers_to_dict(X_info, kmer) # convert ordereddict to pandas dataframe
     
+    print(oDict)
     kmer_df = pd.DataFrame()
 
     for i in oDict:
@@ -75,4 +75,4 @@ for fasta in fasta_sequences:
         print(round(res[0]*100, 3))
         f.write(s)
         f.close()
-# python pred_seq.py --model models/curr_models/em-test.pkl --data test.txt --output o.txt
+# python pred_seq.py --model models/curr_models/em-test.pkl --data test.fasta --output o.txt
