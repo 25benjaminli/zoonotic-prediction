@@ -19,8 +19,9 @@ def getFromSeq(model, X_info) -> pd.DataFrame:
     kmer = 4
     
     X_info = X_info.lower()
-
-    oDict = data_utils.assign_kmers_to_dict(X_info, kmer) # convert ordereddict to pandas dataframe
+    s = product('acgt',repeat = kmer)
+    permset = set(["".join(x) for x in list(s)])
+    oDict = data_utils.assign_kmers_to_dict(X_info, permset, kmer) # convert ordereddict to pandas dataframe
     
     print(oDict)
     kmer_df = pd.DataFrame()
@@ -29,9 +30,12 @@ def getFromSeq(model, X_info) -> pd.DataFrame:
         kmer_df.at[0, i]=oDict[i]
 
     # print(best_gradBoost.predict_proba(kmer_df))
+    # sort based on alphabetical order of columns
+    kmer_df = kmer_df.reindex(sorted(kmer_df.columns), axis=1)
     kmer_df = kmer_df.apply(lambda x: (x-x.min())/(x.max()-x.min()), axis=1) # normalizing
     
-    kmer_df = data_utils.transform_data(model, kmer_df)
+    # kmer_df = data_utils.transform_data(model, kmer_df)
+
 
     return kmer_df
 
