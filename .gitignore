@@ -1,3 +1,6 @@
 /data/
 /train_and_vis/refseq/*
 /models/otheresearch/
+raw_db.tsv
+.vscode/
+.ipynb_checkpoints/
